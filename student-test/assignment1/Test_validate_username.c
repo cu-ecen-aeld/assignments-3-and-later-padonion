@@ -18,5 +18,9 @@ void test_validate_my_username()
      * TODO: Replace the line below with your code here as described above to verify your /conf/username.txt 
      * config file and my_username() functions are setup properly
      */
-    TEST_ASSERT_TRUE_MESSAGE(false,"AESD students, please fix me!");
+    const char *config_name = my_username();
+    printf("my_usernane: %s",config_name);
+    char *reference_name = malloc_username_from_conf_file();
+    printf("malloc...: %s", reference_name);
+    TEST_ASSERT_EQUAL_STRING_MESSAGE(config_name, reference_name, "The file config/username.txt should contain your github username!");
 }
