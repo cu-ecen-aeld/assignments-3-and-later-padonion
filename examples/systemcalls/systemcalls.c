@@ -1,3 +1,6 @@
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
 #include "systemcalls.h"
 
 /**
@@ -9,14 +12,9 @@
 */
 bool do_system(const char *cmd)
 {
-
-/*
- * TODO  add your code here
- *  Call the system() function with the command set in the cmd
- *   and return a boolean true if the system() call completed with success
- *   or false() if it returned a failure
-*/
-
+    int ret = system(cmd);
+    if (ret == -1)
+        return false;
     return true;
 }
 
@@ -58,10 +56,44 @@ bool do_exec(int count, ...)
  *   as second argument to the execv() command.
  *
 */
+    bool ret_code = true;
+
+    pid_t pid = fork();
+    if (pid == -1) {
+        ret_code = false;
+    } else if (pid == 0) {
+        // we are in the child here
+        int ret = execv(command[0], command+1);
+        if (ret == -1) {
+            // if execv failed -> false
+            ret_code = false;
+        }
+    } else {
+        int wstatus;
+        pid_t wpid = wait(&wstatus);
+        if (wpid == -1) {
+            // if wait failed --> false
+            ret_code = false;
+        } else if (!WIFEXITED(wstatus)) {
+            // if child not terminating normally --> false
+            ret_code = false;
+        } else {
+            if (WEXITSTATUS(wstatus) != 0) {
+                // if child terminating normally but with !0 exit code --> false
+                ret_code = false;
+            }
+            printf("\"");
+            for(int i=0; i<count; i++) {
+                printf("%s", command[i]);
+                printf(" ");
+            }
+            printf("\" COMMAND RETURNED %d\n", WEXITSTATUS(wstatus));
+        }
+    }
 
     va_end(args);
 
-    return true;
+    return ret_code;
 }
 
 /**
